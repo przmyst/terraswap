@@ -27,26 +27,21 @@ async function main() {
         const initialPriceOfTokenAInUSD = calculateInitialPriceOfTokenA(nativeAmount, tokenAmount, price);
 
         console.log(`The initial USD price of Token is $${initialPriceOfTokenAInUSD}`);
-
         return
     }
-
-
-    let pairAddress = process.env.POOL_ADDRESS || ''
-    const chainID = 'columbus-5'
 
     const mk = new MnemonicKey({
         mnemonic: process.env.MNEMONIC,
     })
 
-    let gasPrices = await axios('https://columbus-fcd.terra.dev/v1/txs/gas_prices')
-    gasPrices = gasPrices.data
-
     const lcd = new LCDClient({
-        URL: 'https://lcd.terra.dev',
-        chainID,
-        gasAdjustment: 3,
-        gasPrices
+        URL: 'https://terra-classic-lcd.publicnode.com',
+        chainID: 'columbus-5',
+        gasAdjustment: 10,
+        gasPrices: {
+            uluna: '50'
+        },
+        isClassic: true
     })
 
 
@@ -83,10 +78,10 @@ async function main() {
 
             const tx = await wallet.createAndSignTx({
                 msgs: [createPair],
-                chainID
+                chainID: 'columbus-5'
             })
 
-            const result = await lcd.tx.broadcastSync(tx, chainID)
+            const result = await lcd.tx.broadcastSync(tx, 'columbus-5')
 
             console.log('Pair created')
             console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
@@ -95,7 +90,7 @@ async function main() {
 
             const txInfo = await lcd.tx.txInfo(result.txhash)
             let obj = JSON.parse(txInfo.raw_log)
-            pairAddress = obj[0].events[1].attributes[0].value
+            let pairAddress = obj[0].events[1].attributes[0].value
             console.log('Add pool address to .env file:')
             console.log(pairAddress)
         } catch (e) {
@@ -116,7 +111,7 @@ async function main() {
                 process.env.TOKEN_ADDRESS,
                 {
                     increase_allowance: {
-                        spender: pairAddress,
+                        spender: process.env.POOL_ADDRESS,
                         amount: process.env.AMOUNT_TOKEN,
                         expires: {
                             never: {}
@@ -127,9 +122,9 @@ async function main() {
 
             const tx = await wallet.createAndSignTx({
                 msgs: [increaseAllowance],
-                chainID
+                chainID: 'columbus-5'
             })
-            const result = await lcd.tx.broadcastSync(tx, chainID)
+            const result = await lcd.tx.broadcastSync(tx, 'columbus-5')
 
             console.log('Allowance increased')
             console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
@@ -144,7 +139,7 @@ async function main() {
         try {
             const addLiquidity = new MsgExecuteContract(
                 wallet.key.accAddress,
-                pairAddress,
+                process.env.POOL_ADDRESS,
                 {
                     provide_liquidity: {
                         assets: [
@@ -165,6 +160,7 @@ async function main() {
                                 amount: process.env.AMOUNT_TOKEN
                             }
                         ],
+                        deadline: Date.now() + 300000
                     }
                 },
                 new Coins({
@@ -174,18 +170,14 @@ async function main() {
 
             const tx = await wallet.createAndSignTx({
                 msgs: [addLiquidity],
-                chainID
+                chainID: 'columbus-5'
             })
 
-            const result = await lcd.tx.broadcastSync(tx, chainID)
+            const result = await lcd.tx.broadcast(tx)
+            console.log('Liquidity Added')
+            console.log(result.txhash)
 
-
-            if (!result.raw_log) {
-                console.log('Liquidity added')
-                console.log(result.txhash)
-            } else {
-                console.log(result.raw_log)
-            }
+            console.log(result.raw_log)
 
 
         } catch (e) {
