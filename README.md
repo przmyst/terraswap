@@ -11,7 +11,7 @@
 3.) node index calculate-price
 
 4.) node index create-pair
-    
+
     Add pool address to .env
 
 5.) node index increase-allowance

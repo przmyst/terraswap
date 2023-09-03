@@ -1,58 +1,20 @@
 #!/usr/bin/env node
-var cli = require('cli');
+import cli from 'cli'
 
-import {
-    Coins, LCDClient, MnemonicKey, MsgExecuteContract, MsgInstantiateContract
-} from '@terra-money/terra.js'
+import {Coins, LCDClient, MnemonicKey, MsgExecuteContract} from '@terra-money/terra.js'
 import axios from 'axios'
-import {
-    delayP
-} from 'ramda-adjunct'
-import BigNumber from 'bignumber.js';
+import {delayP} from 'ramda-adjunct'
 import {parseUnits} from "ethers";
-
-// Function to calculate spread
-function calculateSpread(existingTokenReserve, existingNativeReserve, addTokenAmount, addNativeAmount) {
-    const newTokenReserve = new BigNumber(existingTokenReserve).plus(addTokenAmount);
-    const newNativeReserve = new BigNumber(existingNativeReserve).plus(addNativeAmount);
-
-    return newTokenReserve.div(newNativeReserve).minus(existingTokenReserve.div(existingNativeReserve));
-}
-
-async function fetchPoolReserves(lcd, pairAddress) {
-    try {
-        const poolInfo = await lcd.wasm.contractQuery(pairAddress, {
-            pool: {}
-        });
-        return {
-            tokenReserve: new BigNumber(poolInfo.assets[0].amount),
-            nativeReserve: new BigNumber(poolInfo.assets[1].amount)
-        };
-    } catch (e) {
-        console.error('Error fetching pool reserves:', e);
-        return null;
-    }
-}
 
 async function getLUNCPrice() {
     let result = await axios('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/market-pairs/latest?slug=terra-luna&start=1&limit=10&category=spot&centerType=all&sort=cmc_rank_advanced&direction=desc&spotUntracked=true')
-    console.log(result.data)
-
     return result.data.data.marketPairs[0].price
 }
 
-// Function to calculate initial USD price of Token A
 function calculateInitialPriceOfTokenA(initialReserveOfTokenA, initialReserveOfTokenB, currentPriceOfTokenBInUSD) {
-    // Calculate the initial price ratio (Token A / Token B)
-    const initialPriceRatio = initialReserveOfTokenA / initialReserveOfTokenB;
-
-    // Calculate the total USD value of initial reserve of Token B
     const initialValueOfTokenBInUSD = initialReserveOfTokenB * currentPriceOfTokenBInUSD;
 
-    // Calculate the initial USD price of Token A
-    const initialPriceOfTokenAInUSD = initialValueOfTokenBInUSD / initialReserveOfTokenA;
-
-    return initialPriceOfTokenAInUSD;
+    return initialValueOfTokenBInUSD / initialReserveOfTokenA;
 }
 
 
@@ -79,9 +41,6 @@ async function main() {
 
     let gasPrices = await axios('https://columbus-fcd.terra.dev/v1/txs/gas_prices')
     gasPrices = gasPrices.data
-    gasPrices.uusd = '1'
-    gasPrices.uluna = '50'
-    // console.log(gasPrices)
 
     const lcd = new LCDClient({
         URL: 'https://lcd.terra.dev',
@@ -89,7 +48,6 @@ async function main() {
         gasAdjustment: 3,
         gasPrices
     })
-
 
 
     const wallet = lcd.wallet(mk)
@@ -141,9 +99,9 @@ async function main() {
             console.log('Add pool address to .env file:')
             console.log(pairAddress)
         } catch (e) {
-            if(e.data && e.data.message && e.data.message.includes('Pair already exists')){
+            if (e.data && e.data.message && e.data.message.includes('Pair already exists')) {
                 console.log('Pair already exists')
-            }else{
+            } else {
                 console.log(e)
             }
         }
@@ -222,18 +180,18 @@ async function main() {
             const result = await lcd.tx.broadcastSync(tx, chainID)
 
 
-            if(!result.raw_log){
+            if (!result.raw_log) {
                 console.log('Liquidity added')
                 console.log(result.txhash)
-            }else{
+            } else {
                 console.log(result.raw_log)
             }
 
 
         } catch (e) {
-            if(e.data && e.data.message){
+            if (e.data && e.data.message) {
                 console.log(e.data.message)
-            }else{
+            } else {
                 console.log(e)
             }
         }
