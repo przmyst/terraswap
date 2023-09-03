@@ -1,19 +1,31 @@
 ### Create Terra Swap Pool and Add Liquidity
-1.) Update .env file
+Install
+
+    npm install
+
+Update .env file
 
     Add token address
     Add mnemonic
     Set token amount
     Set native amount
 
-2.) npm install
+Get Token Price
 
-3.) node index calculate-price
+    node index calculate-price
 
-4.) node index create-pair
+Create Pair
 
-    Add pool address to .env
+    node index create-pair
 
-5.) node index increase-allowance
+Update .env file
 
-6.) node index add-liquidity
+    Add Pool address to .env file
+
+Increase Allowance
+    
+    node index increase-allowance
+
+Add Liquidity
+
+    node index add-liquidity
