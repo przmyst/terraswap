@@ -4,27 +4,28 @@ import cli from 'cli'
 import {Coins, LCDClient, MnemonicKey, MsgExecuteContract} from '@terra-money/terra.js'
 import axios from 'axios'
 import {delayP} from 'ramda-adjunct'
-import {parseUnits} from "ethers";
+import {parseUnits, formatUnits} from "ethers";
+import BigNumber from 'bignumber.js'
 
 async function getLUNCPrice() {
     let result = await axios('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/market-pairs/latest?slug=terra-luna&start=1&limit=10&category=spot&centerType=all&sort=cmc_rank_advanced&direction=desc&spotUntracked=true')
     return result.data.data.marketPairs[0].price
 }
 
-function calculateInitialPriceOfTokenA(initialReserveOfTokenA, initialReserveOfTokenB, currentPriceOfTokenBInUSD) {
+function calculateInitialPriceOfToken(initialReserveOfTokenA, initialReserveOfTokenB, currentPriceOfTokenBInUSD) {
     const initialValueOfTokenBInUSD = initialReserveOfTokenB * currentPriceOfTokenBInUSD;
 
     return initialValueOfTokenBInUSD / initialReserveOfTokenA;
 }
 
-
 async function main() {
+    const amountToken = parseUnits(process.env.AMOUNT_TOKEN, 6).toString()
+    const amountNative = parseUnits(process.env.AMOUNT_NATIVE, 6).toString()
+
     if (cli.command === 'calculate-price') {
         let price = await getLUNCPrice()
-        let nativeAmount = parseUnits(process.env.AMOUNT_NATIVE, 6).toString()
-        let tokenAmount = parseUnits(process.env.AMOUNT_TOKEN, 6).toString()
 
-        const initialPriceOfTokenAInUSD = calculateInitialPriceOfTokenA(nativeAmount, tokenAmount, price);
+        const initialPriceOfTokenAInUSD = calculateInitialPriceOfToken(amountNative, amountToken, price);
 
         console.log(`The initial USD price of Token is $${initialPriceOfTokenAInUSD}`);
         return
@@ -85,14 +86,17 @@ async function main() {
 
             console.log('Pair created')
             console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
+            console.log('Waiting for transaction confirmation...')
 
-            await delayP(10000)
+            await delayP(12000)
 
             const txInfo = await lcd.tx.txInfo(result.txhash)
             let obj = JSON.parse(txInfo.raw_log)
             let pairAddress = obj[0].events[1].attributes[0].value
+
             console.log('Add pool address to .env file:')
             console.log(pairAddress)
+
         } catch (e) {
             if (e.data && e.data.message && e.data.message.includes('Pair already exists')) {
                 console.log('Pair already exists')
@@ -112,7 +116,7 @@ async function main() {
                 {
                     increase_allowance: {
                         spender: process.env.POOL_ADDRESS,
-                        amount: process.env.AMOUNT_TOKEN,
+                        amount: amountToken,
                         expires: {
                             never: {}
                         }
@@ -124,6 +128,7 @@ async function main() {
                 msgs: [increaseAllowance],
                 chainID: 'columbus-5'
             })
+
             const result = await lcd.tx.broadcastSync(tx, 'columbus-5')
 
             console.log('Allowance increased')
@@ -149,7 +154,7 @@ async function main() {
                                         denom: process.env.NATIVE_DENOM
                                     }
                                 },
-                                amount: process.env.AMOUNT_NATIVE
+                                amount: amountNative
                             },
                             {
                                 info: {
@@ -157,14 +162,14 @@ async function main() {
                                         contract_addr: process.env.TOKEN_ADDRESS
                                     }
                                 },
-                                amount: process.env.AMOUNT_TOKEN
+                                amount: amountToken
                             }
                         ],
                         deadline: Date.now() + 300000
                     }
                 },
                 new Coins({
-                    [process.env.NATIVE_DENOM]: process.env.AMOUNT_NATIVE
+                    [process.env.NATIVE_DENOM]: amountNative
                 })
             )
 
@@ -175,10 +180,7 @@ async function main() {
 
             const result = await lcd.tx.broadcast(tx)
             console.log('Liquidity Added')
-            console.log(result.txhash)
-
-            console.log(result.raw_log)
-
+            console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
 
         } catch (e) {
             if (e.data && e.data.message) {
