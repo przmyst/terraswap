@@ -19,6 +19,7 @@ function calculateInitialPriceOfToken(initialReserveOfTokenA, initialReserveOfTo
 }
 
 async function main() {
+
     const amountToken = parseUnits(process.env.AMOUNT_TOKEN, 6).toString()
     const amountNative = parseUnits(process.env.AMOUNT_NATIVE, 6).toString()
 
@@ -180,6 +181,58 @@ async function main() {
 
             const result = await lcd.tx.broadcast(tx)
             console.log('Liquidity Added')
+            console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
+
+        } catch (e) {
+            if (e.data && e.data.message) {
+                console.log(e.data.message)
+            } else {
+                console.log(e)
+            }
+        }
+    }
+
+    if (cli.command === 'swap') {
+
+        const {
+            assets
+        } = await lcd.wasm.contractQuery(process.env.POOL_ADDRESS, {
+            pool: {
+            }
+        })
+
+        const beliefPrice = (assets[0].amount / assets[1].amount).toFixed(18)
+
+        try {
+            const terraSwap = new MsgExecuteContract(
+                wallet.key.accAddress,
+                process.env.POOL_ADDRESS,
+                {
+                    swap: {
+                        max_spread: '1',
+                        offer_asset: {
+                            info: {
+                                native_token: {
+                                    denom: 'uluna',
+                                },
+                            },
+                            amount: parseUnits(cli.args[0], 6).toString(),
+                        },
+                        belief_price: beliefPrice
+                    },
+                },
+                new Coins({
+                    uluna: parseUnits(cli.args[0], 6).toString()
+                })
+            )
+
+            const tx = await wallet.createAndSignTx({
+                msgs: [terraSwap],
+                chainID: 'columbus-5'
+            })
+
+            const result = await lcd.tx.broadcastSync(tx, 'columbus-5')
+            console.log('Swap Complete')
             console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
 
         } catch (e) {
