@@ -9,6 +9,7 @@ cli.parse(null, [
     'add-liquidity',
     'remove-liquidity',
     'test',
-    'swap'
+    'swap-native',
+    'swap-token'
 ]);
 module.exports = require("./main.js")
