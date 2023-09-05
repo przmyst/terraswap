@@ -301,28 +301,40 @@ async function main() {
 
         const beliefPrice = (assets[1].amount / assets[0].amount).toFixed(18)
 
+        const toBase64 = (obj) => {
+            return Buffer.from(JSON.stringify(obj)).toString("base64")
+        }
+
         try {
-            const terraSwap = new MsgExecuteContract(
+            const cw20Swap = new MsgExecuteContract(
                 wallet.key.accAddress,
-                process.env.POOL_ADDRESS,
+                process.env.TOKEN_ADDRESS,
                 {
-                    swap: {
-                        max_spread: cli.args[1],
-                        offer_asset: {
-                            info: {
-                                token: {
-                                    contract_addr: process.env.TOKEN_ADDRESS
+                    "send": {
+                        "contract": process.env.POOL_ADDRESS,
+                        "amount": parseUnits(cli.args[0], 6).toString(),
+                        "msg": toBase64(
+                            {
+                                swap: {
+                                    max_spread: cli.args[1],
+                                    offer_asset: {
+                                        info: {
+                                            token: {
+                                                contract_addr: process.env.TOKEN_ADDRESS
+                                            }
+                                        },
+                                        amount: parseUnits(cli.args[0], 6).toString(),
+                                    },
+                                    belief_price: beliefPrice
                                 }
-                            },
-                            amount: parseUnits(cli.args[0], 6).toString(),
-                        },
-                        belief_price: beliefPrice
+                            }
+                        )
                     }
                 }
             )
 
             const tx = await wallet.createAndSignTx({
-                msgs: [terraSwap],
+                msgs: [cw20Swap],
                 chainID: 'columbus-5'
             })
 
