@@ -147,7 +147,11 @@ async function main() {
             console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
 
         } catch (e) {
-            console.log(e)
+            if (e.response && e.response.data && e.response.data.message) {
+                console.log(e.response.data.message)
+            } else {
+                console.log(e)
+            }
         }
         return
     }
@@ -195,8 +199,8 @@ async function main() {
             console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
 
         } catch (e) {
-            if (e.data && e.data.message) {
-                console.log(e.data.message)
+            if (e.response && e.response.data && e.response.data.message) {
+                console.log(e.response.data.message)
             } else {
                 console.log(e)
             }
@@ -225,8 +229,8 @@ async function main() {
             console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
 
         } catch (e) {
-            if (e.data && e.data.message) {
-                console.log(e.data.message)
+            if (e.response && e.response.data && e.response.data.message) {
+                console.log(e.response.data.message)
             } else {
                 console.log(e)
             }
@@ -275,12 +279,12 @@ async function main() {
             })
 
             const result = await lcd.tx.broadcastSync(tx, 'columbus-5')
-            console.log('Swap Complete')
+            console.log('Native Swap Complete')
             console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
 
         } catch (e) {
-            if (e.data && e.data.message) {
-                console.log(e.data.message)
+            if (e.response && e.response.data && e.response.data.message) {
+                console.log(e.response.data.message)
             } else {
                 console.log(e)
             }
@@ -295,7 +299,7 @@ async function main() {
             pool: {}
         });
 
-        const beliefPrice = (assets[1].amount / assets[0].amount).toFixed(18);
+        const beliefPrice = (assets[1].amount / assets[0].amount).toFixed(18)
 
         try {
             const terraSwap = new MsgExecuteContract(
@@ -315,22 +319,22 @@ async function main() {
                         belief_price: beliefPrice
                     }
                 }
-            );
+            )
 
             const tx = await wallet.createAndSignTx({
                 msgs: [terraSwap],
                 chainID: 'columbus-5'
-            });
+            })
 
-            const result = await lcd.tx.broadcastSync(tx, 'columbus-5');
-            console.log('Token Swap Complete');
-            console.log(`https://finder.terra.money/classic/tx/${result.txhash}`);
+            const result = await lcd.tx.broadcastSync(tx, 'columbus-5')
+            console.log('Token Swap Complete')
+            console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
 
         } catch (e) {
-            if (e.data && e.data.message) {
-                console.log(e.data.message);
+            if (e.response && e.response.data && e.response.data.message) {
+                console.log(e.response.data.message)
             } else {
-                console.log(e);
+                console.log(e)
             }
         }
     }

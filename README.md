@@ -78,6 +78,16 @@ Add liquidity to the pool by running:
 node index add-liquidity
 ```
 
+### Remove Liquidity
+
+Update the `.env` file to include the newly created LP token address.
+
+Remove liquidity from the pool by running:
+
+```bash
+node index remove-liquidity
+```
+
 ## Native Swap
 
 To swap native currency for tokens, use:
@@ -104,14 +114,4 @@ node index swap-token <Amount> <Spread>
 
 ```bash
 node index swap-token 100 0.1
-```
-
-## Remove Liquidity
-
-Update the `.env` file to include the newly created LP token address.
-
-Remove liquidity from the pool by running:
-
-```bash
-node index remove-liquidity
 ```
