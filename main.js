@@ -6,14 +6,18 @@ import axios from 'axios'
 import {delayP} from 'ramda-adjunct'
 import {parseUnits, formatUnits} from "ethers"
 
-async function getLUNCPrice() {
-    let result = await axios('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/market-pairs/latest?slug=terra-luna&start=1&limit=10&category=spot&centerType=all&sort=cmc_rank_advanced&direction=desc&spotUntracked=true')
+async function getNativePrice() {
+    let nativeSlug = 'terra-luna'
+    if(process.env.NATIVE_DENOM === 'uusd'){
+        nativeSlug = 'terrausd'
+    }
+    let result = await axios(`https://api.coinmarketcap.com/data-api/v3/cryptocurrency/market-pairs/latest?slug=${nativeSlug}&start=1&limit=10&category=spot&centerType=all&sort=cmc_rank_advanced&direction=desc&spotUntracked=true`)
     return result.data.data.marketPairs[0].price
 }
 
 
-function findQuantityLUNC(priceOfLUNC, quantityToken, targetPrice) {
-    return quantityToken * (targetPrice / priceOfLUNC)
+function findQuantityNative(priceOfNative, quantityToken, targetPrice) {
+    return quantityToken * (targetPrice / priceOfNative)
 }
 
 async function main() {
@@ -22,15 +26,20 @@ async function main() {
     const amountNative = parseUnits(process.env.AMOUNT_NATIVE, 6).toString()
 
     if (cli.command === 'get-native') {
-        let priceOfLUNC = await getLUNCPrice()
+        let priceOfNative = await getNativePrice()
 
-        const quantityA = findQuantityLUNC(priceOfLUNC, cli.args[0], cli.args[1])
+        const quantityNative = findQuantityNative(priceOfNative, cli.args[0], cli.args[1])
 
-        console.log(`LUNC Price USD: ${priceOfLUNC}`)
+        let nativeSymbol = 'LUNC'
+        if(process.env.NATIVE_DENOM === 'uusd'){
+            nativeSymbol = 'USTC'
+        }
+
+        console.log(`${nativeSymbol} Price USD: ${priceOfNative}`)
         console.log(`Tokens In: ${cli.args[0]}`)
         console.log(`Target Price USD: ${cli.args[1]}`)
-        console.log(`LUNC needed: ${quantityA}`)
-        console.log('Update .env with tokens in and LUNC needed')
+        console.log(`${nativeSymbol} needed: ${quantityNative}`)
+        console.log(`Update .env with tokens and ${nativeSymbol} amounts needed`)
         return
     }
 
