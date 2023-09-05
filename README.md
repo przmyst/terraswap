@@ -83,11 +83,11 @@ node index add-liquidity
 To swap native currency for tokens, use:
 
 ```bash
-node index swap <Amount>
+node index swap <Amount> <Spread>
 ```
 
 **Example:**
 
 ```bash
-node index swap 0.001
+node index swap 0.001 0.1
 ```

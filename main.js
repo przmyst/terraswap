@@ -252,20 +252,20 @@ async function main() {
                 process.env.POOL_ADDRESS,
                 {
                     swap: {
-                        max_spread: '1',
+                        max_spread: cli.args[1],
                         offer_asset: {
                             info: {
                                 native_token: {
-                                    denom: 'uluna',
-                                },
+                                    denom: process.env.NATIVE_DENOM
+                                }
                             },
                             amount: parseUnits(cli.args[0], 6).toString(),
                         },
                         belief_price: beliefPrice
-                    },
+                    }
                 },
                 new Coins({
-                    uluna: parseUnits(cli.args[0], 6).toString()
+                    [process.env.NATIVE_DENOM]: parseUnits(cli.args[0], 6).toString()
                 })
             )
 
