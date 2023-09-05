@@ -30,6 +30,7 @@ npm install
 2. **Add Mnemonic**
 3. **Set Token Amount**
 4. **Set Native Amount**
+5. **Set Native Denom: uluna | uusd**
 
 ## Get Token Price
 
