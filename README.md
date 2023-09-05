@@ -1,5 +1,3 @@
-# Improved README Markup
-
 ## Table of Contents
 
 - [Installation](#installation)
