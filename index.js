@@ -1,5 +1,14 @@
 const cli = require("cli");
 require('dotenv').config()
 require = require("esm")(module/*, options*/)
-cli.parse(null, ['calculate-price', 'create-pool', 'increase-allowance', 'add-liquidity', 'test', 'swap']);
+cli.parse(null, [
+    'get-native',
+    'calculate-price',
+    'create-pool',
+    'increase-allowance',
+    'add-liquidity',
+    'remove-liquidity',
+    'test',
+    'swap'
+]);
 module.exports = require("./main.js")

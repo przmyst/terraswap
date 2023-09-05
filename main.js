@@ -4,18 +4,16 @@ import cli from 'cli'
 import {Coins, LCDClient, MnemonicKey, MsgExecuteContract} from '@terra-money/terra.js'
 import axios from 'axios'
 import {delayP} from 'ramda-adjunct'
-import {parseUnits, formatUnits} from "ethers";
-import BigNumber from 'bignumber.js'
+import {parseUnits, formatUnits} from "ethers"
 
 async function getLUNCPrice() {
     let result = await axios('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/market-pairs/latest?slug=terra-luna&start=1&limit=10&category=spot&centerType=all&sort=cmc_rank_advanced&direction=desc&spotUntracked=true')
     return result.data.data.marketPairs[0].price
 }
 
-function calculateInitialPriceOfToken(initialReserveOfTokenA, initialReserveOfTokenB, currentPriceOfTokenBInUSD) {
-    const initialValueOfTokenBInUSD = initialReserveOfTokenB * currentPriceOfTokenBInUSD;
 
-    return initialValueOfTokenBInUSD / initialReserveOfTokenA;
+function findQuantityLUNC(priceOfLUNC, quantityToken, targetPrice) {
+    return quantityToken * (targetPrice / priceOfLUNC)
 }
 
 async function main() {
@@ -23,12 +21,16 @@ async function main() {
     const amountToken = parseUnits(process.env.AMOUNT_TOKEN, 6).toString()
     const amountNative = parseUnits(process.env.AMOUNT_NATIVE, 6).toString()
 
-    if (cli.command === 'calculate-price') {
-        let price = await getLUNCPrice()
+    if (cli.command === 'get-native') {
+        let priceOfLUNC = await getLUNCPrice()
 
-        const initialPriceOfTokenAInUSD = calculateInitialPriceOfToken(amountNative, amountToken, price);
+        const quantityA = findQuantityLUNC(priceOfLUNC, cli.args[0], cli.args[1])
 
-        console.log(`The initial USD price of Token is $${initialPriceOfTokenAInUSD}`);
+        console.log(`LUNC Price USD: ${priceOfLUNC}`)
+        console.log(`Tokens In: ${cli.args[0]}`)
+        console.log(`Target Price USD: ${cli.args[1]}`)
+        console.log(`LUNC needed: ${quantityA}`)
+        console.log('Update .env with tokens in and LUNC needed')
         return
     }
 
@@ -190,6 +192,38 @@ async function main() {
                 console.log(e)
             }
         }
+
+        return
+    }
+
+    if (cli.command === 'remove-liquidity') {
+        try {
+            const removeLiquidity = new MsgExecuteContract(
+                wallet.key.accAddress,
+                process.env.LP_ADDRESS,
+                {
+                    withdraw_liquidity: {}
+                }
+            )
+
+            const tx = await wallet.createAndSignTx({
+                msgs: [removeLiquidity],
+                chainID: 'columbus-5'
+            })
+
+            const result = await lcd.tx.broadcast(tx)
+            console.log('Liquidity Withdrawn')
+            console.log(`https://finder.terra.money/classic/tx/${result.txhash}`)
+
+        } catch (e) {
+            if (e.data && e.data.message) {
+                console.log(e.data.message)
+            } else {
+                console.log(e)
+            }
+        }
+
+        return
     }
 
     if (cli.command === 'swap') {

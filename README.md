@@ -1,38 +1,94 @@
-### Create Terra Swap Pool and Add Liquidity
-### Install
+# Improved README Markup
 
-    npm install
+## Table of Contents
 
-#### Update .env file
-Add token address
+- [Installation](#installation)
+- [Configuration](#configuration)
+    - [Update .env File](#update-env-file)
+- [Get Token Price](#get-token-price)
+- [Create a Terra Swap Pool](#create-a-terra-swap-pool)
+    - [Create Pair](#create-pair)
+    - [Add Pool Address](#add-pool-address)
+- [Liquidity Operations](#liquidity-operations)
+    - [Increase Allowance](#increase-allowance)
+    - [Add Liquidity](#add-liquidity)
+- [Token Swap](#token-swap)
 
-Add mnemonic
+---
 
-Set token amount
+## Installation
 
-Set native amount
+To install the required packages, run the following command:
 
+```bash
+npm install
+```
 
-#### Get Token Price
+## Configuration
 
-    node index calculate-price
+### Update .env File
 
-#### Create Pair
+1. **Add Token Address**
+2. **Add Mnemonic**
+3. **Set Token Amount**
+4. **Set Native Amount**
 
-    node index create-pair
+## Get Token Price
 
-#### Update .env file
+To get the token price, run:
 
-    Add Pool address to .env file
+```bash
+node index get-native <Tokens-in> <Target-Price>
+```
 
-#### Increase Allowance
-    
-    node index increase-allowance
+**Example:**
 
-#### Add Liquidity
+```bash
+node index get-native 100000 0.00001
+```
 
-    node index add-liquidity
+## Create a Terra Swap Pool
 
-#### Swap Native For Token
+### Create Pair
 
-    node index swap 0.001
+Run the following command to create a pair:
+
+```bash
+node index create-pair
+```
+
+### Add Pool Address
+
+Update the `.env` file to include the newly created pool address.
+
+## Liquidity Operations
+
+### Increase Allowance
+
+To increase the token allowance, execute:
+
+```bash
+node index increase-allowance
+```
+
+### Add Liquidity
+
+Add liquidity to the pool by running:
+
+```bash
+node index add-liquidity
+```
+
+## Token Swap
+
+To swap native currency for tokens, use:
+
+```bash
+node index swap <Amount>
+```
+
+**Example:**
+
+```bash
+node index swap 0.001
+```
